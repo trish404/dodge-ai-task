@@ -22,4 +22,24 @@ The query layer enables structured exploration of the graph through traversal an
 
 <img width="1052" height="721" alt="Screenshot 2026-03-24 at 12 07 08 PM" src="https://github.com/user-attachments/assets/321a7f92-386e-424d-9f6a-b19bc22daa26" />
 
+## PHASE 4 & 5: LLM Integration + Guardrails
+The integration of a Large Language Model (LLM) transformed the system from a rule-based query engine into an intelligent data assistant capable of interpreting natural language queries and converting them into structured commands.
+
+In Phase 4, the LLM was constrained using a strict system prompt to generate deterministic, schema-aligned commands (e.g., TRACE SO_XXXX). This ensured that all outputs remained executable and grounded in the underlying graph dataset, eliminating hallucinations and enabling seamless interaction between user intent and backend logic.
+
+The pipeline was designed as:
+User Query → LLM (structured command) → Graph Execution → LLM (natural response),
+allowing flexible natural language input while maintaining precise and reliable outputs.
+
+In Phase 5, multiple guardrails were introduced to improve robustness and safety. These included:
+
+Detection of out-of-scope queries
+Handling of incomplete or malformed inputs
+Strict command validation before execution
+Prevention of unsupported operations
+
+Through extensive testing across valid queries, edge cases, adversarial inputs, and multi-entity queries, the system demonstrated strong reliability and consistency. The use of schema-constrained generation and validation layers ensured that all responses were both accurate and contextually relevant to the dataset.
+
+Overall, this phase establishes a controlled LLM-driven interface that balances flexibility with determinism, making the system both user-friendly and production-ready.
+
 
