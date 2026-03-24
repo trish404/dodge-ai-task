@@ -83,9 +83,11 @@ for _, p_row in payments.iterrows():
     for _, j_row in matching_journal.iterrows():
         G.add_edge(j_row['node_id'], p_row['node_id'], type="journal_to_payment")
 
+
 print("\n--- GRAPH SUMMARY ---")
 print("Total Nodes:", G.number_of_nodes())
 print("Total Edges:", G.number_of_edges())
+
 
 def find_complete_flow():
     for _, s_row in sales_items.iterrows():
@@ -143,10 +145,13 @@ if sample_order:
 else:
     print("\n⚠️ No complete flow found in dataset")
 
+
+
 def execute_query(query):
 
     query = query.strip().upper()
 
+    
     if query.startswith("TRACE"):
         parts = query.split()
 
@@ -165,9 +170,11 @@ def execute_query(query):
 
         return results
 
+    
     if query == "TOP_PRODUCTS":
         return get_highest_billing_products()
 
+    
     if query == "INCOMPLETE_ORDERS":
         return find_incomplete_orders()
 
@@ -259,17 +266,19 @@ print(get_highest_billing_products())
 print("\n--- INCOMPLETE ORDERS ---")
 print(find_incomplete_orders()[:10])
 
-print("\n--- LLM QUERY MODE ---")
+if __name__ == "__main__":
 
-while True:
-    user_input = input("\nAsk something (or type exit): ")
+    print("\n--- LLM QUERY MODE ---")
 
-    if not user_input.strip():
-        print("Please enter a valid query.")
-        continue
+    while True:
+        user_input = input("\nAsk something (or type exit): ")
 
-    if user_input.lower() == "exit":
-        break
+        if not user_input.strip():
+            print("Please enter a valid query.")
+            continue
 
-    response = full_pipeline(user_input, execute_query)
-    print("\nAnswer:", response)
+        if user_input.lower() == "exit":
+            break
+
+        response = full_pipeline(user_input, execute_query)
+        print("\nAnswer:", response)
