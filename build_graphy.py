@@ -1,5 +1,6 @@
 import pandas as pd
 import networkx as nx
+from llm_pipeline import full_pipeline
 
 sales_items = pd.read_csv("clean_sales_items.csv")
 delivery_items = pd.read_csv("clean_delivery_items.csv")
@@ -8,7 +9,6 @@ journal = pd.read_csv("clean_journal.csv")
 payments = pd.read_csv("clean_payments.csv")
 
 G = nx.DiGraph()
-
 
 for _, row in sales_items.iterrows():
     G.add_node(
@@ -83,11 +83,9 @@ for _, p_row in payments.iterrows():
     for _, j_row in matching_journal.iterrows():
         G.add_edge(j_row['node_id'], p_row['node_id'], type="journal_to_payment")
 
-
 print("\n--- GRAPH SUMMARY ---")
 print("Total Nodes:", G.number_of_nodes())
 print("Total Edges:", G.number_of_edges())
-
 
 def find_complete_flow():
     for _, s_row in sales_items.iterrows():
@@ -119,7 +117,6 @@ def find_complete_flow():
 
     return None
 
-
 sample_order = find_complete_flow()
 
 if sample_order:
@@ -146,7 +143,35 @@ if sample_order:
 else:
     print("\n⚠️ No complete flow found in dataset")
 
+def execute_query(query):
 
+    query = query.strip().upper()
+
+    if query.startswith("TRACE"):
+        parts = query.split()
+
+        order_ids = [p for p in parts if p.startswith("SO_")]
+
+        if not order_ids:
+            return "No valid order IDs provided"
+
+        results = {}
+
+        for oid in order_ids:
+            if oid in G:
+                results[oid] = get_full_flow(oid)
+            else:
+                results[oid] = "Not found"
+
+        return results
+
+    if query == "TOP_PRODUCTS":
+        return get_highest_billing_products()
+
+    if query == "INCOMPLETE_ORDERS":
+        return find_incomplete_orders()
+
+    return "Invalid structured query"
 
 def get_full_flow(order_node):
     flow = {
@@ -224,7 +249,6 @@ def find_incomplete_orders():
 
     return incomplete
 
-
 print("\n--- FULL FLOW QUERY ---")
 if sample_order:
     print(get_full_flow(sample_order))
@@ -234,3 +258,18 @@ print(get_highest_billing_products())
 
 print("\n--- INCOMPLETE ORDERS ---")
 print(find_incomplete_orders()[:10])
+
+print("\n--- LLM QUERY MODE ---")
+
+while True:
+    user_input = input("\nAsk something (or type exit): ")
+
+    if not user_input.strip():
+        print("Please enter a valid query.")
+        continue
+
+    if user_input.lower() == "exit":
+        break
+
+    response = full_pipeline(user_input, execute_query)
+    print("\nAnswer:", response)
