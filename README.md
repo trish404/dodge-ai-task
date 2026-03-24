@@ -41,5 +41,8 @@ Prevention of unsupported operations
 Through extensive testing across valid queries, edge cases, adversarial inputs, and multi-entity queries, the system demonstrated strong reliability and consistency. The use of schema-constrained generation and validation layers ensured that all responses were both accurate and contextually relevant to the dataset.
 
 Overall, this phase establishes a controlled LLM-driven interface that balances flexibility with determinism, making the system both user-friendly and production-ready.
+<img width="1049" height="287" alt="Screenshot 2026-03-24 at 12 54 37 PM" src="https://github.com/user-attachments/assets/a33cd418-4ce8-43c3-bdf0-b4381296a256" />
+
+<img width="857" height="625" alt="Screenshot 2026-03-24 at 12 55 36 PM" src="https://github.com/user-attachments/assets/056453c7-2c3c-4ecf-8be4-836a11b1c54b" />
 
 
