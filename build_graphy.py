@@ -9,6 +9,7 @@ payments = pd.read_csv("clean_payments.csv")
 
 G = nx.DiGraph()
 
+
 for _, row in sales_items.iterrows():
     G.add_node(
         row['node_id'],
@@ -53,6 +54,7 @@ for _, row in payments.iterrows():
         amount=row['amountintransactioncurrency']
     )
 
+
 for _, d_row in delivery_items.iterrows():
     so = d_row['referencesddocument']
     matching_orders = sales_items[sales_items['salesorder'] == so]
@@ -81,9 +83,11 @@ for _, p_row in payments.iterrows():
     for _, j_row in matching_journal.iterrows():
         G.add_edge(j_row['node_id'], p_row['node_id'], type="journal_to_payment")
 
+
 print("\n--- GRAPH SUMMARY ---")
 print("Total Nodes:", G.number_of_nodes())
 print("Total Edges:", G.number_of_edges())
+
 
 def find_complete_flow():
     for _, s_row in sales_items.iterrows():
@@ -115,6 +119,7 @@ def find_complete_flow():
 
     return None
 
+
 sample_order = find_complete_flow()
 
 if sample_order:
@@ -139,4 +144,93 @@ if sample_order:
     print("→ Payment:", level4)
 
 else:
-    print("\n No complete flow found in dataset")
+    print("\n⚠️ No complete flow found in dataset")
+
+
+
+def get_full_flow(order_node):
+    flow = {
+        "order": order_node,
+        "deliveries": [],
+        "billing": [],
+        "journal": [],
+        "payments": []
+    }
+
+    deliveries = list(G.successors(order_node))
+    flow["deliveries"] = deliveries
+
+    billing = []
+    for d in deliveries:
+        billing.extend(list(G.successors(d)))
+    flow["billing"] = billing
+
+    journal_list = []
+    for b in billing:
+        journal_list.extend(list(G.successors(b)))
+    flow["journal"] = journal_list
+
+    payments_list = []
+    for j in journal_list:
+        payments_list.extend(list(G.successors(j)))
+    flow["payments"] = payments_list
+
+    return flow
+
+
+def get_highest_billing_products(top_n=5):
+    df = billing_items.copy()
+
+    grouped = (
+        df.groupby("material")["netamount"]
+        .sum()
+        .sort_values(ascending=False)
+    )
+
+    return grouped.head(top_n)
+
+
+def find_incomplete_orders():
+    incomplete = []
+
+    for _, row in sales_items.iterrows():
+        node = row['node_id']
+
+        deliveries = list(G.successors(node))
+        if not deliveries:
+            incomplete.append((node, "no_delivery"))
+            continue
+
+        billing = []
+        for d in deliveries:
+            billing.extend(list(G.successors(d)))
+        if not billing:
+            incomplete.append((node, "no_billing"))
+            continue
+
+        journal_list = []
+        for b in billing:
+            journal_list.extend(list(G.successors(b)))
+        if not journal_list:
+            incomplete.append((node, "no_journal"))
+            continue
+
+        payments_list = []
+        for j in journal_list:
+            payments_list.extend(list(G.successors(j)))
+        if not payments_list:
+            incomplete.append((node, "no_payment"))
+            continue
+
+    return incomplete
+
+
+print("\n--- FULL FLOW QUERY ---")
+if sample_order:
+    print(get_full_flow(sample_order))
+
+print("\n--- TOP PRODUCTS ---")
+print(get_highest_billing_products())
+
+print("\n--- INCOMPLETE ORDERS ---")
+print(find_incomplete_orders()[:10])
