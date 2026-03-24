@@ -1,4 +1,4 @@
-# dodge-ai-task
+# Dodge-ai-task
 ## Introduction
 This project involves building a graph-based data modeling and query system on top of a fragmented enterprise dataset representing the Order-to-Cash (O2C) process. The goal is to unify disconnected data across multiple business entities and enable intuitive exploration through a visual graph interface.
 In addition, the system incorporates a conversational interface powered by a Large Language Model (LLM), allowing users to query the data using natural language. These queries are dynamically translated into structured operations, ensuring that all responses are accurate and grounded in the dataset.
