@@ -12,3 +12,6 @@ The dataset was successfully ingested, cleaned, and standardized to ensure consi
 
 ## PHASE 2: Graph Construction
 The graph successfully models the end-to-end Order-to-Cash flow by connecting transactional entities across multiple stages. The constructed graph captures real-world complexities such as one-to-many relationships, where a single delivery can result in multiple billing documents and corresponding financial entries. This demonstrates the effectiveness of graph-based modeling in representing non-linear business processes and enabling traceability across fragmented enterprise data.
+
+
+<img width="569" height="252" alt="Screenshot 2026-03-24 at 11 56 24 AM" src="https://github.com/user-attachments/assets/7084cabb-437d-4615-bec4-096e5e72659f" />
