@@ -15,3 +15,11 @@ The graph successfully models the end-to-end Order-to-Cash flow by connecting tr
 
 
 <img width="569" height="252" alt="Screenshot 2026-03-24 at 11 56 24 AM" src="https://github.com/user-attachments/assets/7084cabb-437d-4615-bec4-096e5e72659f" />
+
+## PHASE 3: Query Layer
+The query layer enables structured exploration of the graph through traversal and aggregation functions. By leveraging the relationships encoded in the graph, the system can reconstruct complete transaction flows, compute business metrics such as top billed products, and identify anomalies such as incomplete order lifecycles. This demonstrates the effectiveness of graph-based querying in handling non-linear, multi-stage enterprise data while supporting both analytical and diagnostic use cases.
+
+
+<img width="1052" height="721" alt="Screenshot 2026-03-24 at 12 07 08 PM" src="https://github.com/user-attachments/assets/321a7f92-386e-424d-9f6a-b19bc22daa26" />
+
+
