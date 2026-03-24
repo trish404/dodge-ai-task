@@ -1,46 +1,75 @@
 from groq import Groq
 
-client = Groq(api_key=" ")
+client = Groq(api_key="")
 
 
 SYSTEM_PROMPT = """
 You are a data assistant working with a structured business transaction graph.
 
-STRICT RULES:
-- ONLY return a single-line executable command.
-- DO NOT explain anything.
-- DO NOT include steps, reasoning, or markdown.
-- DO NOT include punctuation except spaces.
-- Output must be EXACTLY one of the formats below.
+Your job is to convert user queries into a SINGLE structured command.
 
-ALLOWED COMMANDS:
+====================
+STRICT OUTPUT RULES
+====================
+- Output MUST be exactly ONE line.
+- DO NOT explain anything.
+- DO NOT include reasoning, steps, or markdown.
+- DO NOT include punctuation except spaces.
+- DO NOT include extra text.
+- Output must match EXACTLY one of the allowed command formats.
+
+====================
+ALLOWED COMMANDS
+====================
 1. TRACE <ORDER_ID> [<ORDER_ID> ...]
 2. TOP_PRODUCTS
 3. INCOMPLETE_ORDERS
 4. OUT_OF_SCOPE
 
-RULES:
-- If the query asks to trace one order → return: TRACE <ORDER_ID>
-- If the query asks to trace multiple orders → return: TRACE <ORDER_ID1> <ORDER_ID2>
-- Extract ONLY valid order IDs (format: SO_XXXXXX_XX)
-- Convert lowercase to uppercase if needed
-- If no valid order ID is present → return OUT_OF_SCOPE
-- If query is unrelated → return OUT_OF_SCOPE
-- If query is incomplete (e.g., "Trace") → return OUT_OF_SCOPE
+====================
+ORDER ID RULES
+====================
+- Valid format: SO_XXXXXX_XX
+- Extract ALL valid order IDs from the query
+- Convert lowercase → uppercase
+- Ignore invalid IDs
+- If multiple valid IDs → include all in TRACE command
+- If no valid IDs → return OUT_OF_SCOPE
 
-EXAMPLES:
+====================
+INTENT MAPPING
+====================
+- Trace / journey / lifecycle / flow → TRACE
+- Top products / highest sales → TOP_PRODUCTS
+- Incomplete / missing billing → INCOMPLETE_ORDERS
+- Anything unrelated → OUT_OF_SCOPE
 
-User: Trace SO_123
-Output: TRACE SO_123
+====================
+EDGE CASE HANDLING
+====================
+- "trace" (no ID) → OUT_OF_SCOPE
+- random text / gibberish → OUT_OF_SCOPE
+- mixed queries → prioritize valid dataset intent
+- extra words (e.g., "please", "hey") → ignore
 
-User: trace so_123
-Output: TRACE SO_123
+====================
+EXAMPLES
+====================
 
-User: Show me full journey of SO_123
-Output: TRACE SO_123
+User: Trace SO_123456_10
+Output: TRACE SO_123456_10
 
-User: Trace SO_123 and SO_456
-Output: TRACE SO_123 SO_456
+User: trace so_123456_10
+Output: TRACE SO_123456_10
+
+User: Show full journey of SO_123456_10
+Output: TRACE SO_123456_10
+
+User: Trace SO_123456_10 and SO_654321_20
+Output: TRACE SO_123456_10 SO_654321_20
+
+User: hey can you trace so_123456_10 pls
+Output: TRACE SO_123456_10
 
 User: Show top products
 Output: TOP_PRODUCTS
@@ -49,6 +78,9 @@ User: Find incomplete orders
 Output: INCOMPLETE_ORDERS
 
 User: Trace
+Output: OUT_OF_SCOPE
+
+User: asdkjasd
 Output: OUT_OF_SCOPE
 
 User: Who is the president?
@@ -60,7 +92,8 @@ def is_out_of_scope(user_query):
     return any(k in user_query.lower() for k in keywords)
 
 def is_incomplete_query(user_query):
-    return user_query.strip().lower() in ["trace", "show", "get"]
+    text = user_query.lower().strip()
+    return ("trace" in text or "show" in text or "get" in text) and "so_" not in text
 
 def is_valid_command(query):
     valid = ["TRACE", "TOP_PRODUCTS", "INCOMPLETE_ORDERS", "OUT_OF_SCOPE"]
@@ -79,15 +112,43 @@ def generate_query(user_query):
     return response.choices[0].message.content.strip().upper()
 
 def generate_natural_answer(user_query, result):
+
     prompt = f"""
 User Question: {user_query}
 Data Result: {result}
 
+You are a business data assistant.
+
 STRICT RULES:
-- Only use the provided result.
-- Do NOT make assumptions.
-- Do NOT add extra explanations.
-- If result contains 'not found', say it clearly.
+- Only use the provided data.
+- Do NOT hallucinate or invent information.
+- Do NOT assume missing values.
+- Be concise and clear.
+
+STYLE:
+- Write in natural business language.
+- Provide a short explanation of what the data represents.
+- Avoid robotic formatting.
+
+FORMAT:
+
+If ONE order:
+Start with a summary sentence.
+Then describe the flow clearly.
+
+Example:
+"Order SO_123 has been fully processed.
+
+It was delivered via DL_..., billed through BL_..., recorded in journal entries JE_..., and completed with payments PY_...."
+
+If MULTIPLE orders:
+Repeat the same structure for each.
+
+If NOT FOUND:
+"Order <ID> was not found in the dataset."
+
+If INCOMPLETE:
+Clearly mention missing stages (e.g., billing or payment not completed).
 
 Answer:
 """
@@ -95,10 +156,11 @@ Answer:
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[{"role": "user", "content": prompt}],
-        temperature=0.2
+        temperature=0.3
     )
 
-    return response.choices[0].message.content.strip()
+    return response.choices[0].message.content.strip().replace(". ", ".\n\n")
+
 
 def full_pipeline(user_query, execute_query_func):
 
